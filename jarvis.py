@@ -9,7 +9,7 @@ import speech_recognition as sr
 import win32com.client
 import pywhatkit
 from dotenv import load_dotenv
-from google import genai
+from openai import OpenAI
 
 
 # ==========================
@@ -18,14 +18,14 @@ from google import genai
 
 load_dotenv()
 
-api_key = os.getenv("GEMINI_API_KEY")
+api_key = os.getenv("OPENAI_API_KEY")
 
 if not api_key:
     raise RuntimeError(
-        "GEMINI_API_KEY missing. Check your .env file."
+        "OPENAI_API_KEY missing. Check your .env file."
     )
 
-client = genai.Client(api_key=api_key)
+client = OpenAI(api_key=api_key)
 
 
 # =======================
@@ -320,23 +320,23 @@ def ask_ai(question):
 
     try:
 
-        response = client.models.generate_content(
+        response = client.responses.create(
 
-            model="gemini-3.5-flash",
+            model="gpt-6-luna",
 
-            contents=question,
-
-            config={
-                "system_instruction": (
+            instructions=(
                     "You are JARVIS, a helpful voice assistant. "
                     "Answer clearly and briefly because your "
                     "answer will be spoken aloud. "
                     "Do not claim you performed laptop actions."
-                )
-            }
+                    "unless the program actually performed them."
+                ),
+
+                input= question
+            
         )
 
-        answer = (response.text or "").strip()
+        answer = response.output_text.strip()
 
         if answer:
 
@@ -351,13 +351,13 @@ def ask_ai(question):
     except Exception as error:
 
         print(
-            "GEMINI API error:",
+            "OPENAI API error:",
             error,
             flush=True
         )
 
         speak(
-            "I could not connect to Gemini."
+            "I could not connect to OpenAI."
         )
 
 
